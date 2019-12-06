@@ -2,7 +2,7 @@
 
 def dockerVersions = ['19.03.5', '18.09.9']
 def baseImages = ['alpine', 'debian']
-def pythonVersions = ['py27', 'py37']
+def pythonVersions = ['py37']
 
 pipeline {
     agent none
@@ -62,7 +62,7 @@ pipeline {
                     steps {
                         checkout scm
                         sh './script/setup/osx'
-                        sh 'tox -e py27,py37 -- tests/unit'
+                        sh 'tox -e py37 -- tests/unit'
                         sh './script/build/osx'
                         dir ('dist') {
                           sh 'openssl sha256 -r -out docker-compose-Darwin-x86_64.sha256 docker-compose-Darwin-x86_64'
@@ -99,7 +99,7 @@ pipeline {
                     }
                     steps {
                         checkout scm
-                        bat 'tox.exe -e py27,py37 -- tests/unit'
+                        bat 'tox.exe -e py37 -- tests/unit'
                         powershell '.\\script\\build\\windows.ps1'
                         dir ('dist') {
                           sh 'openssl sha256 -r -out docker-compose-Windows-x86_64.exe.sha256 docker-compose-Windows-x86_64.exe'
@@ -270,5 +270,16 @@ def pushRuntimeImage(baseImage) {
             sh "docker tag docker/compose:alpine-${env.TAG_NAME} docker/compose:${env.TAG_NAME}"
             sh "docker push docker/compose:${env.TAG_NAME}"
         }
+    }
+}
+
+def githubRelease(repo) {
+    withCredentials([string(credentialsId: 'github-compose-release-test-token', variable: 'GITHUB_TOKEN')]) {
+        def data = "{\"tag_name\": \"${env.TAG_NAME}\", \"name\": \"${env.TAG_NAME}\", \"draft\": true, \"prerelease\": true}"
+        def url = "https://api.github.com/repos/$repo/releases"
+        def reply = sh(returnStdout: true, script: "curl -sSf -H \"Authorization: token $GITHUB_TOKEN\" -H \"Accept: application/json\" -H \"Content-type: application/json\" -X POST -d '$data' $url")
+        def release = readJSON text: reply
+        url = release.upload_url.replace('{?name,label}', '')
+        sh("for f in * ; do curl -sf -H \"Authorization: token $GITHUB_TOKEN\" -H \"Accept: application/json\" -H \"Content-type: application/octet-stream\" -X POST --data-binary \"@\${f}\" $url?name=\${f}; done")
     }
 }
