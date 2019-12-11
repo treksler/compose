@@ -1,6 +1,14 @@
 Change log
 ==========
 
+1.26.0dev (2019-12-10)
+-------------------
+
+### Features
+
+- Added `--no-wrap` to `docker-compose config`
+
+
 1.25.0 (2019-11-18)
 -------------------
 
