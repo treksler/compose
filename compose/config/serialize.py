@@ -95,7 +95,7 @@ def v3_introduced_name_key(key):
     return V3_5
 
 
-def serialize_config(config, image_digests=None, escape_dollar=True):
+def serialize_config(config, image_digests=None, escape_dollar=True, wrap=True):
     if escape_dollar:
         yaml.SafeDumper.add_representer(str, serialize_string_escape_dollar)
         yaml.SafeDumper.add_representer(six.text_type, serialize_string_escape_dollar)
@@ -106,7 +106,7 @@ def serialize_config(config, image_digests=None, escape_dollar=True):
         denormalize_config(config, image_digests),
         default_flow_style=False,
         indent=2,
-        width=80,
+        width=80 if wrap else float("inf"),
         allow_unicode=True
     )
 
