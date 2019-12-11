@@ -345,6 +345,7 @@ class TopLevelCommand(object):
         Options:
             --resolve-image-digests  Pin image tags to digests.
             --no-interpolate         Don't interpolate environment variables
+            --no-wrap                Don't wrap output at 80 characters
             -q, --quiet              Only validate the configuration, don't print
                                      anything.
             --services               Print the service names, one per line.
@@ -354,7 +355,10 @@ class TopLevelCommand(object):
                                      or use the wildcard symbol to display all services
         """
 
-        additional_options = {'--no-interpolate': options.get('--no-interpolate')}
+        additional_options = {
+            '--no-interpolate': options.get('--no-interpolate'),
+            '--no-wrap': options.get('--no-wrap')
+        }
         compose_config = get_config_from_options('.', self.toplevel_options, additional_options)
         image_digests = None
 
@@ -383,7 +387,7 @@ class TopLevelCommand(object):
                     print('{} {}'.format(service.name, service.config_hash))
             return
 
-        print(serialize_config(compose_config, image_digests, not options['--no-interpolate']))
+        print(serialize_config(compose_config, image_digests, not options['--no-interpolate'], not options['--no-wrap']))
 
     def create(self, options):
         """
